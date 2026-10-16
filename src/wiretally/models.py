@@ -1,5 +1,5 @@
-﻿from dataclasses import dataclass
-from typing import Optional
+﻿from dataclasses import dataclass, field
+from typing import Optional, List
 @dataclass
 class PacketMetadata:
     """Normalized structure for packet metadata extracted from PCAP."""
@@ -26,3 +26,15 @@ class PacketMetadata:
         endpoint1 = f"{self.ip_src}:{self.src_port}"
         endpoint2 = f"{self.ip_dst}:{self.dst_port}"
         return f"{self.protocol}|{min(endpoint1, endpoint2)}<->{max(endpoint1, endpoint2)}"
+@dataclass
+class FlowRecord:
+    """Aggregated bidirectional flow state."""
+    connection_id: str
+    protocol: str
+    endpoint_a: str
+    endpoint_b: str
+    start_time: float
+    end_time: float
+    total_packets: int = 0
+    total_bytes: int = 0
+    tcp_flags_seen: set[str] = field(default_factory=set)

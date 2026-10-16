@@ -5,6 +5,7 @@ import argparse
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from wiretally.validator import validate_capture_file, ValidationError
 from wiretally.parser import extract_packet_metadata, ParserError
+from wiretally.analyzer import aggregate_flows
 def find_tshark() -> str | None:
     tshark_path = shutil.which("tshark")
     if tshark_path: return tshark_path
@@ -27,10 +28,12 @@ def main():
     print(f"[i] Analyzing capture file: {args.capture_file}")
     try:
         validate_capture_file(args.capture_file)
-        print("[v] File validation passed.")
         print("[i] Extracting and normalizing packet metadata...")
         packets = extract_packet_metadata(tshark_path, args.capture_file)
         print(f"[v] Successfully extracted {len(packets)} normalized packets.")
+        print("[i] Aggregating network flows...")
+        flows = aggregate_flows(packets)
+        print(f"[v] Discovered {len(flows)} unique bidirectional flows.")
     except ValidationError as e:
         print(f"[!] Validation Error: {e}")
         sys.exit(1)
