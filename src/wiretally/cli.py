@@ -3,7 +3,7 @@ import sys
 import shutil
 import argparse
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from wiretally.validator import validate_capture_file, ValidationError
 from wiretally.parser import extract_packet_metadata, ParserError
@@ -25,10 +25,11 @@ def verify_dependencies() -> str:
     return tshark_path
 def generate_report(capture_name: str, flows: list[FlowRecord], findings: list) -> str:
     """Generates a versioned JSON report."""
+    now_utc = datetime.now(timezone.utc)
     report = {
         "wiretally_version": "0.1.0",
         "schema_version": "1.0",
-        "analysis_time": datetime.utcnow().isoformat() + "Z",
+        "analysis_time": now_utc.isoformat().replace("+00:00", "Z"),
         "capture_file": os.path.basename(capture_name),
         "summary": {
             "total_flows": len(flows),
@@ -36,7 +37,7 @@ def generate_report(capture_name: str, flows: list[FlowRecord], findings: list) 
         },
         "findings": findings
     }
-    report_filename = f"wiretally_report_{int(datetime.utcnow().timestamp())}.json"
+    report_filename = f"wiretally_report_{int(now_utc.timestamp())}.json"
     with open(report_filename, 'w') as f:
         json.dump(report, f, indent=4)
     return report_filename
