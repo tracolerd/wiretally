@@ -1,8 +1,8 @@
 ﻿import os
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any
-# Import our core logic
 from .validator import validate_capture_file, ValidationError
 from .parser import extract_packet_metadata, ParserError
 from .analyzer import aggregate_flows
@@ -13,6 +13,14 @@ app = FastAPI(
     description="Defensive Network Analysis Workbench Local Service",
     version="0.1.0"
 )
+# Allow React frontend to communicate with this API locally
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 class AnalysisRequest(BaseModel):
     pcap_path: str
 class AnalysisResponse(BaseModel):
@@ -22,17 +30,12 @@ class AnalysisResponse(BaseModel):
     findings: List[Dict[str, Any]]
 @app.post("/api/v1/analyze", response_model=AnalysisResponse)
 async def analyze_pcap(request: AnalysisRequest):
-    """
-    Analyzes a local PCAP file and returns the findings.
-    """
     tshark_path = find_tshark()
     if not tshark_path:
         raise HTTPException(status_code=500, detail="TShark executable not found on this system.")
     filepath = request.pcap_path
     try:
-        # Validate input
         validate_capture_file(filepath)
-        # Process data
         packets = extract_packet_metadata(tshark_path, filepath)
         flows = aggregate_flows(packets)
         findings = run_all_rules(flows)
@@ -50,4 +53,4 @@ async def analyze_pcap(request: AnalysisRequest):
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 @app.get("/")
 async def root():
-    return {"message": "WireTally API is running. Visit /docs for the interactive Swagger UI."}
+    return {"message": "WireTally API is running."}
