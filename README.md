@@ -1,6 +1,6 @@
 <!-- Animated project banner -->
 <p align="center">
-  <img src="assets/wiretally-banner.svg" alt="WireTally — defensive network investigation workbench with animated network-flow lines" width="100%">
+  <img src="assets/wiretally-banner.svg" alt="WireTally — local PCAP analysis workbench with bidirectional network-flow visualization" width="100%">
 </p>
 
 <p align="center">
