@@ -12,7 +12,7 @@
 
 <p align="center">
   <strong>Turn packet captures into evidence—not guesses.</strong><br>
-  A local-first, defensive PCAP analysis prototype for flow summaries and rule-based network observations.
+  A local-first, defensive PCAP/PCAPNG analysis prototype for bidirectional-flow summaries and transparent, rule-based network observations.
 </p>
 
 <p align="center">
