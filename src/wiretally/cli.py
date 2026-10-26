@@ -9,7 +9,8 @@ from wiretally.validator import validate_capture_file, ValidationError
 from wiretally.parser import extract_packet_metadata, ParserError
 from wiretally.analyzer import aggregate_flows
 from wiretally.rules import run_all_rules
-from wiretally.models import FlowRecord
+from wiretally.models import FlowRecord, PacketMetadata
+from wiretally.reporting import extract_dns_query_names
 def find_tshark() -> str | None:
     tshark_path = shutil.which("tshark")
     if tshark_path: return tshark_path
@@ -23,19 +24,27 @@ def verify_dependencies() -> str:
         print("[!] Error: TShark executable not found on this system.")
         sys.exit(1)
     return tshark_path
-def generate_report(capture_name: str, flows: list[FlowRecord], findings: list) -> str:
-    """Generates a versioned JSON report."""
+def generate_report(
+    capture_name: str,
+    flows: list[FlowRecord],
+    findings: list,
+    packets: list[PacketMetadata] | None = None,
+) -> str:
+    """Generate a versioned JSON report including DNS metadata observations."""
     now_utc = datetime.now(timezone.utc)
+    dns_queries = extract_dns_query_names(packets or [])
     report = {
         "wiretally_version": "0.1.0",
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "analysis_time": now_utc.isoformat().replace("+00:00", "Z"),
         "capture_file": os.path.basename(capture_name),
         "summary": {
             "total_flows": len(flows),
-            "total_findings": len(findings)
+            "total_findings": len(findings),
+            "total_dns_queries": len(dns_queries),
         },
-        "findings": findings
+        "dns_queries": dns_queries,
+        "findings": findings,
     }
     report_filename = f"wiretally_report_{int(now_utc.timestamp())}.json"
     with open(report_filename, 'w') as f:
@@ -59,7 +68,7 @@ def main():
         print("[i] Applying defensive analysis rules...")
         findings = run_all_rules(flows)
         print(f"[v] Discovered {len(findings)} potential findings.")
-        report_file = generate_report(args.capture_file, flows, findings)
+        report_file = generate_report(args.capture_file, flows, findings, packets)
         print(f"\n[v] SUCCESS! Report exported to: {report_file}")
     except ValidationError as e:
         print(f"[!] Validation Error: {e}")
