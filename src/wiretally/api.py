@@ -8,6 +8,7 @@ from .parser import extract_packet_metadata, ParserError
 from .analyzer import aggregate_flows
 from .rules import run_all_rules
 from .cli import find_tshark
+from .reporting import extract_dns_query_names
 app = FastAPI(
     title="WireTally API",
     description="Defensive Network Analysis Workbench Local Service",
@@ -27,6 +28,8 @@ class AnalysisResponse(BaseModel):
     status: str
     total_flows: int
     total_findings: int
+    total_dns_queries: int
+    dns_queries: List[str]
     findings: List[Dict[str, Any]]
 @app.post("/api/v1/analyze", response_model=AnalysisResponse)
 async def analyze_pcap(request: AnalysisRequest):
@@ -42,10 +45,13 @@ async def analyze_pcap(request: AnalysisRequest):
         packets = extract_packet_metadata(tshark_path, filepath)
         flows = aggregate_flows(packets)
         findings = run_all_rules(flows)
+        dns_queries = extract_dns_query_names(packets)
         return AnalysisResponse(
             status="success",
             total_flows=len(flows),
             total_findings=len(findings),
+            total_dns_queries=len(dns_queries),
+            dns_queries=dns_queries,
             findings=findings
         )
     except ValidationError as e:
