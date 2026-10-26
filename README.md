@@ -24,7 +24,7 @@
 
 ---
 
-> **Project status: functional prototype / early MVP.** The repository contains a Python CLI, a FastAPI local endpoint, and a React UI that submits a local PCAP path. This audit reviewed the source files on `main`, but did not execute the project on a separate machine. There is currently no committed automated test suite or GitHub Actions CI workflow, so do not interpret the available source as independently verified or production-ready software.
+> **Project status: functional prototype / early MVP.** The repository contains a Python CLI, a FastAPI local endpoint, and a React UI that submits a local PCAP path. This audit reviewed the source files on `main`, but did not execute the project on a separate machine. The repository now includes a focused Python unit test for TShark timeout handling and a GitHub Actions workflow that compiles the Python source and runs standard-library unittest discovery. These checks do not exercise a real TShark binary, actual PCAP files, or the full browser UI; do not interpret them as proof of production readiness.
 
 ## At a glance
 
@@ -42,7 +42,7 @@ It is intentionally metadata-oriented. It does not capture live network traffic,
 | Local API | FastAPI endpoint accepting a local file path |
 | Web UI | React + TypeScript form and findings view |
 | Persistence | No database; reports are local files |
-| Automated verification | No committed tests or CI workflow found during this audit |
+| Automated verification | GitHub Actions compiles Python files and runs the currently committed unittest suite; real TShark integration is not yet exercised |
 
 ## Why WireTally?
 
