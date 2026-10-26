@@ -12,6 +12,8 @@ interface AnalysisResponse {
   status: string;
   total_flows: number;
   total_findings: number;
+  total_dns_queries: number;
+  dns_queries: string[];
   findings: Finding[];
 }
 function App() {
@@ -62,6 +64,16 @@ function App() {
           <p><strong>Status:</strong> {result.status}</p>
           <p><strong>Total Flows:</strong> {result.total_flows}</p>
           <p><strong>Total Findings:</strong> {result.total_findings}</p>
+          <p><strong>Unique DNS Queries:</strong> {result.total_dns_queries}</p>
+          {result.dns_queries.length > 0 && (
+            <section>
+              <h3>DNS Query Names</h3>
+              <p>Names are taken from packet metadata. They may disclose internal hostnames or browsing activity; treat exported results as sensitive.</p>
+              <ul>
+                {result.dns_queries.map((name) => <li key={name}>{name}</li>)}
+              </ul>
+            </section>
+          )}
           {result.findings.length > 0 && (
             <>
               <h3>Findings</h3>
