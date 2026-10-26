@@ -32,7 +32,10 @@ class AnalysisResponse(BaseModel):
 async def analyze_pcap(request: AnalysisRequest):
     tshark_path = find_tshark()
     if not tshark_path:
-        raise HTTPException(status_code=500, detail="TShark executable not found on this system.")
+        raise HTTPException(
+            status_code=503,
+            detail={"code": "tshark_unavailable", "message": "TShark executable not found on this system."},
+        )
     filepath = request.pcap_path
     try:
         validate_capture_file(filepath)
@@ -48,9 +51,15 @@ async def analyze_pcap(request: AnalysisRequest):
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except ParserError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        status_code = 504 if e.code == "tshark_timeout" else 422
+        raise HTTPException(status_code=status_code, detail={"code": e.code, "message": str(e)})
+    except Exception:
+        # Do not expose internal exception text, local file paths, or runtime
+        # details to an API caller.
+        raise HTTPException(
+            status_code=500,
+            detail={"code": "analysis_internal_error", "message": "Unexpected internal analysis error."},
+        )
 @app.get("/")
 async def root():
     return {"message": "WireTally API is running."}

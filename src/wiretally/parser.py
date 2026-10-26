@@ -10,7 +10,15 @@ DEFAULT_TSHARK_TIMEOUT_SECONDS = 60
 
 
 class ParserError(Exception):
-    """Raised when TShark output cannot be processed safely."""
+    """Raised when TShark output cannot be processed safely.
+
+    The stable code attribute is intended for API consumers; error text is
+    for humans and may change as diagnostics improve.
+    """
+
+    def __init__(self, message: str, code: str = "parser_error") -> None:
+        super().__init__(message)
+        self.code = code
 
 
 def _get_first_val(layer_dict: dict, key: str):
@@ -48,24 +56,32 @@ def extract_packet_metadata(
         )
     except subprocess.TimeoutExpired as exc:
         raise ParserError(
-            f"TShark analysis exceeded the {timeout_seconds}-second timeout."
+            f"TShark analysis exceeded the {timeout_seconds}-second timeout.",
+            code="tshark_timeout",
         ) from exc
     except OSError as exc:
         # Avoid returning raw command arguments or local path details to callers.
-        raise ParserError("Unable to start TShark. Verify its installation and configuration.") from exc
+        raise ParserError(
+            "Unable to start TShark. Verify its installation and configuration.",
+            code="tshark_unavailable",
+        ) from exc
     except Exception as exc:
-        raise ParserError("Unexpected error while starting TShark.") from exc
+        raise ParserError("Unexpected error while starting TShark.", code="tshark_execution_error") from exc
 
-    if result.returncode != 0 and not result.stdout.strip():
-        reason = result.stderr.strip() if result.stderr else "Unknown error"
-        raise ParserError(f"TShark processing failed: {reason}")
+    if result.returncode != 0:
+        # Do not treat partial JSON output as a successful analysis. Avoid
+        # returning raw stderr, which can contain local paths or environment data.
+        raise ParserError(
+            f"TShark processing failed with exit code {result.returncode}.",
+            code="tshark_failed",
+        )
     if not result.stdout.strip():
         return []
 
     try:
         packets = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
-        raise ParserError("Failed to parse JSON output from TShark.") from exc
+        raise ParserError("Failed to parse JSON output from TShark.", code="tshark_invalid_json") from exc
 
     normalized_packets: list[PacketMetadata] = []
     for packet in packets:
