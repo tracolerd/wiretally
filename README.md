@@ -58,7 +58,7 @@ Packet captures are detailed, but raw packet data is not always the fastest way 
 - **Local API:** exposes `POST /api/v1/analyze` for a local integration.
 - **React interface:** accepts a local file path and displays the API's flow/finding summary.
 
-DNS query names are extracted into packet metadata, but the current aggregation and reporting pipeline does **not** publish a separate DNS investigation report. A field being parsed is not the same thing as a completed DNS-analysis feature.
+The CLI JSON report and local API now publish a separate `dns_queries` section with unique, normalized DNS query names and a count. DNS data can reveal internal hostnames or browsing activity; treat reports as sensitive and only analyze captures you are authorized to inspect.
 
 ## How it works
 
@@ -170,13 +170,15 @@ The CLI's versioned report currently has this general structure:
 ```json
 {
   "wiretally_version": "0.1.0",
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "analysis_time": "2026-01-01T12:00:00Z",
   "capture_file": "sample.pcap",
   "summary": {
     "total_flows": 0,
-    "total_findings": 0
+    "total_findings": 0,
+    "total_dns_queries": 0
   },
+  "dns_queries": [],
   "findings": []
 }
 ```
