@@ -289,3 +289,16 @@ This project is independently built and maintained by Nurul Faiyaz. The project'
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## Reproducible Python installation
+
+The Python package metadata and runtime dependency bounds are defined in `pyproject.toml`. From the repository root, install the package and its dependencies with:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m unittest discover -s tests -v
+```
+
+TShark remains an external system dependency for actual PCAP analysis; the unit tests mock the subprocess and do not require real packet captures or a TShark installation.
