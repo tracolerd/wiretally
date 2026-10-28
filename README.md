@@ -302,3 +302,7 @@ python -m unittest discover -s tests -v
 ```
 
 TShark remains an external system dependency for actual PCAP analysis; the unit tests mock the subprocess and do not require real packet captures or a TShark installation.
+
+---
+
+<p align="center"><sub>Portfolio catalog · Project 04 of 22 · <a href="https://github.com/tracolerd">Nurul Faiyaz</a></sub></p>
